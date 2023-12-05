@@ -30,3 +30,5 @@ require (
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/tools v0.12.1-0.20230815132531-74c255bcf846 // indirect
 )
+
+replace github.com/zishang520/engine.io-go-parser => github.com/TeCHiScy/engine.io-go-parser v1.2.4
