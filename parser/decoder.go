@@ -16,10 +16,10 @@ import (
 )
 
 var (
-	parser_log = log.NewLog("socket.io:parser")
+	parserLog = log.NewLog("socket.io:parser")
 
 	// These strings must not be used as event names, as they have a special meaning.
-	RESERVED_EVENTS = _types.NewSet(
+	ReservedEvents = _types.NewSet(
 		"connect",       // used on the client side
 		"connect_error", // used on the client side
 		"disconnect",    // used on both sides
@@ -104,7 +104,7 @@ func (d *decoder) Add(data any) error {
 			packet, err := d.reconstructor.takeBinaryData(rdata)
 			d.mu.RUnlock()
 			if err != nil {
-				return errors.New(fmt.Sprintf("Decode error: %v", err.Error()))
+				return fmt.Errorf("decode error: %v", err.Error())
 			}
 			if packet != nil {
 				// received final buffer
@@ -114,7 +114,7 @@ func (d *decoder) Add(data any) error {
 				d.Emit("decoded", packet)
 			}
 		} else {
-			return errors.New(fmt.Sprintf("Unknown type: %v", data))
+			return fmt.Errorf("unknown type: %v", data)
 		}
 	}
 
@@ -124,10 +124,10 @@ func (d *decoder) Add(data any) error {
 func (d *decoder) decodeAsString(str types.BufferInterface) error {
 	packet, err := d.decodeString(str)
 	if err != nil {
-		parser_log.Debug("decode err %v", err)
+		parserLog.Debug("decode err %v", err)
 		return err
 	}
-	if packet.Type == BINARY_EVENT || packet.Type == BINARY_ACK {
+	if packet.Type == BinaryEvent || packet.Type == BinaryAck {
 		// binary packet's json
 		d.mu.Lock()
 		d.reconstructor = NewBinaryReconstructor(packet)
@@ -147,7 +147,7 @@ func (d *decoder) decodeAsString(str types.BufferInterface) error {
 func (d *decoder) decodeString(str types.BufferInterface) (packet *Packet, err error) {
 	defer func(str string) {
 		if err == nil {
-			parser_log.Debug("decoded %s as %v", str, packet)
+			parserLog.Debug("decoded %s as %v", str, packet)
 		}
 	}(str.String())
 
@@ -159,51 +159,51 @@ func (d *decoder) decodeString(str types.BufferInterface) (packet *Packet, err e
 	}
 	packet.Type = PacketType(msgType)
 	if !packet.Type.Valid() {
-		return nil, errors.New(fmt.Sprintf("unknown packet type %d", packet.Type))
+		return nil, fmt.Errorf("unknown packet type %d", packet.Type)
 	}
 	// look up attachments if type binary
-	if packet.Type == BINARY_EVENT || packet.Type == BINARY_ACK {
+	if packet.Type == BinaryEvent || packet.Type == BinaryAck {
 		buf, err := str.ReadString('-')
 		if err != nil {
 			// The scan is over and it is not found '-' indicating that there is a problem.
-			return nil, errors.New("Illegal attachments")
+			return nil, errors.New("illegal attachments")
 		}
-		_l := len(buf)
-		if _l < 2 { // 'xxx-'
-			return nil, errors.New("Illegal attachments")
+		l := len(buf)
+		if l < 2 { // 'xxx-'
+			return nil, errors.New("illegal attachments")
 		}
-		attachments, err := strconv.ParseUint(buf[:_l-1], 10, 64)
+		attachments, err := strconv.ParseUint(buf[:l-1], 10, 64)
 		if err != nil {
-			return nil, errors.New("Illegal attachments")
+			return nil, errors.New("illegal attachments")
 		}
 		packet.Attachments = &attachments
 	}
 
 	// look up namespace (if any)
 	if nsp, err := str.ReadByte(); err == nil {
-		if '/' == nsp {
+		if nsp == '/' {
 			_nsp, err := str.ReadString(',')
 			if err != nil {
 				if err != io.EOF {
-					return nil, errors.New("Illegal namespace")
+					return nil, errors.New("illegal namespace")
 				}
 				packet.Nsp = "/" + _nsp
 			} else {
 				_l := len(_nsp)
 				if _l < 1 {
-					return nil, errors.New("Illegal namespace")
+					return nil, errors.New("illegal namespace")
 				}
 				packet.Nsp = "/" + _nsp[:_l-1]
 			}
 		} else {
 			if err := str.UnreadByte(); err != nil {
-				return nil, errors.New("Illegal namespace")
+				return nil, errors.New("illegal namespace")
 			}
 			packet.Nsp = "/"
 		}
 	} else {
 		if err != io.EOF {
-			return nil, errors.New("Illegal namespace")
+			return nil, errors.New("illegal namespace")
 		}
 		packet.Nsp = "/"
 	}
@@ -226,7 +226,7 @@ func (d *decoder) decodeString(str types.BufferInterface) (packet *Packet, err e
 				}
 			} else {
 				if err := str.UnreadByte(); err != nil {
-					return nil, errors.New("Illegal id")
+					return nil, errors.New("illegal id")
 				}
 				break
 			}
@@ -237,7 +237,7 @@ func (d *decoder) decodeString(str types.BufferInterface) (packet *Packet, err e
 			if err != nil {
 				return nil, err
 			}
-			packet.Id = &id
+			packet.ID = &id
 		}
 	}
 
@@ -259,24 +259,24 @@ func (d *decoder) decodeString(str types.BufferInterface) (packet *Packet, err e
 
 func isPayloadValid(t PacketType, payload any) bool {
 	switch t {
-	case CONNECT:
+	case Connect:
 		_, ok := payload.(map[string]any)
 		return ok
-	case DISCONNECT:
+	case Disconnect:
 		return payload == nil
-	case CONNECT_ERROR:
+	case ConnectError:
 		_, ok := payload.(map[string]any)
 		if !ok {
 			_, ok = payload.(string)
 		}
 		return ok
-	case EVENT, BINARY_EVENT:
+	case Event, BinaryEvent:
 		data, ok := payload.([]any)
 		if ok && len(data) > 0 {
 			event, isString := data[0].(string)
-			return isString && !RESERVED_EVENTS.Has(event)
+			return isString && !ReservedEvents.Has(event)
 		}
-	case ACK, BINARY_ACK:
+	case Ack, BinaryAck:
 		_, ok := payload.([]any)
 		return ok
 	}

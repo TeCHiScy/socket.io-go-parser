@@ -13,7 +13,7 @@ type Placeholder struct {
 	Num         int  `json:"num" mapstructure:"num"  msgpack:"num"`
 }
 
-// Replaces every io.Reader | []byte in packet with a numbered placeholder.
+// DeconstructPacket replaces every io.Reader | []byte in packet with a numbered placeholder.
 func DeconstructPacket(packet *Packet) (pack *Packet, buffers []types.BufferInterface) {
 	pack = packet
 	pack.Data = _deconstructPacket(packet.Data, &buffers)
@@ -60,14 +60,14 @@ func _deconstructPacket(data any, buffers *[]types.BufferInterface) any {
 	return data
 }
 
-// Reconstructs a binary packet from its placeholder packet and buffers
+// ReconstructPacket reconstructs a binary packet from its placeholder packet and buffers
 func ReconstructPacket(data *Packet, buffers []types.BufferInterface) (_ *Packet, err error) {
-	data.Data, err = _reconstructPacket(data.Data, &buffers)
+	data.Data, _ = reconstructPacket(data.Data, &buffers)
 	data.Attachments = nil // no longer useful
 	return data, nil
 }
 
-func _reconstructPacket(data any, buffers *[]types.BufferInterface) (any, error) {
+func reconstructPacket(data any, buffers *[]types.BufferInterface) (any, error) {
 	if data == nil {
 		return nil, nil
 	}
@@ -75,7 +75,7 @@ func _reconstructPacket(data any, buffers *[]types.BufferInterface) (any, error)
 	case []any:
 		newData := make([]any, 0, len(d))
 		for _, v := range d {
-			_data, err := _reconstructPacket(v, buffers)
+			_data, err := reconstructPacket(v, buffers)
 			if err != nil {
 				return nil, err
 			}
@@ -94,7 +94,7 @@ func _reconstructPacket(data any, buffers *[]types.BufferInterface) (any, error)
 		}
 		newData := map[string]any{}
 		for k, v := range d {
-			_data, err := _reconstructPacket(v, buffers)
+			_data, err := reconstructPacket(v, buffers)
 			if err != nil {
 				return nil, err
 			}

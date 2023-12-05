@@ -7,19 +7,19 @@ type (
 		Type        PacketType `json:"type" mapstructure:"type" msgpack:"type"`
 		Nsp         string     `json:"nsp" mapstructure:"nsp" msgpack:"nsp"`
 		Data        any        `json:"data,omitempty" mapstructure:"data,omitempty" msgpack:"data,omitempty"`
-		Id          *uint64    `json:"id,omitempty" mapstructure:"id,omitempty" msgpack:"id,omitempty"`
+		ID          *uint64    `json:"id,omitempty" mapstructure:"id,omitempty" msgpack:"id,omitempty"`
 		Attachments *uint64    `json:"attachments,omitempty" mapstructure:"attachments,omitempty" msgpack:"attachments,omitempty"`
 	}
 )
 
 const (
-	CONNECT       PacketType = '0'
-	DISCONNECT    PacketType = '1'
-	EVENT         PacketType = '2'
-	ACK           PacketType = '3'
-	CONNECT_ERROR PacketType = '4'
-	BINARY_EVENT  PacketType = '5'
-	BINARY_ACK    PacketType = '6'
+	Connect      PacketType = '0'
+	Disconnect   PacketType = '1'
+	Event        PacketType = '2'
+	Ack          PacketType = '3'
+	ConnectError PacketType = '4'
+	BinaryEvent  PacketType = '5'
+	BinaryAck    PacketType = '6'
 )
 
 func (t PacketType) Valid() bool {
@@ -28,19 +28,19 @@ func (t PacketType) Valid() bool {
 
 func (t PacketType) String() string {
 	switch t {
-	case CONNECT:
+	case Connect:
 		return "CONNECT"
-	case DISCONNECT:
+	case Disconnect:
 		return "DISCONNECT"
-	case EVENT:
+	case Event:
 		return "EVENT"
-	case ACK:
+	case Ack:
 		return "ACK"
-	case CONNECT_ERROR:
+	case ConnectError:
 		return "CONNECT_ERROR"
-	case BINARY_EVENT:
+	case BinaryEvent:
 		return "BINARY_EVENT"
-	case BINARY_ACK:
+	case BinaryAck:
 		return "BINARY_ACK"
 	}
 	return "UNKNOWN"

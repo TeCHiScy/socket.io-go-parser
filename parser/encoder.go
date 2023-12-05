@@ -19,13 +19,13 @@ func NewEncoder() Encoder {
 // Encode a packet as a single string if non-binary, or as a
 // buffer sequence, depending on packet type.
 func (e *encoder) Encode(packet *Packet) []types.BufferInterface {
-	parser_log.Debug("encoding packet %v", packet)
-	if packet.Type == EVENT || packet.Type == ACK {
+	parserLog.Debug("encoding packet %v", packet)
+	if packet.Type == Event || packet.Type == Ack {
 		if HasBinary(packet.Data) {
-			if packet.Type == EVENT {
-				packet.Type = BINARY_EVENT
+			if packet.Type == Event {
+				packet.Type = BinaryEvent
 			} else {
-				packet.Type = BINARY_ACK
+				packet.Type = BinaryAck
 			}
 			return e.encodeAsBinary(packet)
 		}
@@ -65,19 +65,19 @@ func (e *encoder) encodeAsString(packet *Packet) types.BufferInterface {
 	// first is type
 	str := types.NewStringBuffer([]byte{byte(packet.Type)})
 	// attachments if we have them
-	if (packet.Type == BINARY_EVENT || packet.Type == BINARY_ACK) && packet.Attachments != nil {
+	if (packet.Type == BinaryEvent || packet.Type == BinaryAck) && packet.Attachments != nil {
 		str.WriteString(strconv.FormatUint(*packet.Attachments, 10))
 		str.WriteByte('-')
 	}
 	// if we have a namespace other than `/`
 	// we append it followed by a comma `,`
-	if len(packet.Nsp) > 0 && "/" != packet.Nsp {
+	if len(packet.Nsp) > 0 && packet.Nsp != "/" {
 		str.WriteString(packet.Nsp)
 		str.WriteByte(',')
 	}
 	// immediately followed by the id
-	if nil != packet.Id {
-		str.WriteString(strconv.FormatUint(*packet.Id, 10))
+	if nil != packet.ID {
+		str.WriteString(strconv.FormatUint(*packet.ID, 10))
 	}
 	// json data
 	if nil != packet.Data {
@@ -85,7 +85,7 @@ func (e *encoder) encodeAsString(packet *Packet) types.BufferInterface {
 			str.Write(b)
 		}
 	}
-	parser_log.Debug("encoded %v as %v", packet, str)
+	parserLog.Debug("encoded %v as %v", packet, str)
 	return str
 }
 

@@ -7,7 +7,7 @@ import (
 	"github.com/zishang520/engine.io-go-parser/types"
 )
 
-// Returns true if obj is a Buffer or a File.
+// IsBinary returns true if obj is a Buffer or a File.
 func IsBinary(data any) bool {
 	switch data.(type) {
 	case *types.StringBuffer: // false

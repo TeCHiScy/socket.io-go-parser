@@ -6,13 +6,12 @@ import (
 )
 
 type (
-
-	// A socket.io Encoder instance
+	// Encoder is a socket.io Encoder instance
 	Encoder interface {
 		Encode(*Packet) []types.BufferInterface
 	}
 
-	// A socket.io Decoder instance
+	// Decoder is a socket.io Decoder instance
 	Decoder interface {
 		events.EventEmitter
 
