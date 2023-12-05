@@ -2,7 +2,7 @@ package parser
 
 import (
 	"github.com/zishang520/engine.io-go-parser/types"
-	"github.com/zishang520/engine.io/v2/events"
+	"github.com/zishang520/socket.io-go-parser/v2/events"
 )
 
 type (

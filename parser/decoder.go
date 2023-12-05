@@ -10,21 +10,20 @@ import (
 	"sync"
 
 	"github.com/zishang520/engine.io-go-parser/types"
-	"github.com/zishang520/engine.io/v2/events"
-	"github.com/zishang520/engine.io/v2/log"
-	_types "github.com/zishang520/engine.io/v2/types"
+	"github.com/zishang520/socket.io-go-parser/v2/events"
+	"github.com/zishang520/socket.io-go-parser/v2/log"
 )
 
 var (
 	parserLog = log.NewLog("socket.io:parser")
 
 	// These strings must not be used as event names, as they have a special meaning.
-	ReservedEvents = _types.NewSet(
-		"connect",       // used on the client side
-		"connect_error", // used on the client side
-		"disconnect",    // used on both sides
-		"disconnecting", // used on the server side
-	)
+	ReservedEvents = map[string]struct{}{
+		"connect":       {}, // used on the client side
+		"connect_error": {}, // used on the client side
+		"disconnect":    {}, // used on both sides
+		"disconnecting": {}, // used on the server side
+	}
 )
 
 // A socket.io Decoder instance
@@ -274,7 +273,8 @@ func isPayloadValid(t PacketType, payload any) bool {
 		data, ok := payload.([]any)
 		if ok && len(data) > 0 {
 			event, isString := data[0].(string)
-			return isString && !ReservedEvents.Has(event)
+			_, isReserved := ReservedEvents[event]
+			return isString && !isReserved
 		}
 	case Ack, BinaryAck:
 		_, ok := payload.([]any)
